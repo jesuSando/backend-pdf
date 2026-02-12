@@ -1,43 +1,49 @@
 const { PDFDocument, rgb, StandardFonts } = require("pdf-lib");
 const Handlebars = require("handlebars");
 
-const generatePdf = async (htmlTemplate, data) => {
+const generatePdfFromTemplate = async (templateJson, data) => {
     try {
-        // 1️⃣ Compilar HTML con Handlebars
-        const compiledHtml = Handlebars.compile(htmlTemplate)(data);
-
-        // 2️⃣ Crear documento PDF
         const pdfDoc = await PDFDocument.create();
 
-        // 3️⃣ Agregar página
-        const page = pdfDoc.addPage();
+        const page = pdfDoc.addPage([595, 842]);
 
-        // Configurar tamaño de página (A4 por defecto)
-        const { width, height } = page.getSize();
+        for (const obj of templateJson.objects) {
+            if (obj.type === "text") {
+                const font = await pdfDoc.embedFont(
+                    StandardFonts[obj.font] || StandardFonts.Helvetica
+                );
 
-        // 4️⃣ Fuente
-        const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-        const fontSize = 12;
+                const content = Handlebars.compile(obj.content)(data);
 
-        // 5️⃣ Dibujar texto (HTML simple como texto plano)
-        page.drawText(compiledHtml, {
-            x: 50,
-            y: height - 50,
-            size: fontSize,
-            font,
-            color: rgb(0, 0, 0),
-            maxWidth: width - 100,
-            lineHeight: 14,
-        });
+                const color = obj.color.startsWith("#") ? hexToRgb(obj.color) : rgb(0, 0, 0);
 
-        // 6️⃣ Retornar buffer
+                page.drawText(content, {
+                    x: obj.x,
+                    y: obj.y,
+                    size: obj.fontSize || 12,
+                    font,
+                    color,
+                });
+            }
+
+            // TODO: agregar más tipos como imagen, rectángulo, línea si se necesita
+        }
+
+        // 4️⃣ Guardar PDF y retornar buffer
         const pdfBytes = await pdfDoc.save();
         return Buffer.from(pdfBytes);
     } catch (error) {
-        throw new Error("Error generating PDF: " + error.message);
+        throw new Error("Error generating PDF from template: " + error.message);
     }
 };
 
-module.exports = {
-    generatePdf,
-};
+// Helper para convertir HEX a rgb()
+function hexToRgb(hex) {
+    const bigint = parseInt(hex.replace("#", ""), 16);
+    const r = ((bigint >> 16) & 255) / 255;
+    const g = ((bigint >> 8) & 255) / 255;
+    const b = (bigint & 255) / 255;
+    return rgb(r, g, b);
+}
+
+module.exports = { generatePdfFromTemplate };

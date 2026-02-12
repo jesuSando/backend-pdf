@@ -2,15 +2,13 @@ const templateService = require("../services/template.service");
 
 const createTemplate = async (req, res, next) => {
     try {
-        const { name, html } = req.body;
+        const { name, templateJson } = req.body;
 
-        if (!name || !html) {
-            return res.status(400).json({
-                message: "Name and html are required",
-            });
+        if (!name || !templateJson) {
+            return res.status(400).json({ message: "name and templateJson are required" });
         }
 
-        const template = await templateService.createTemplate(name, html);
+        const template = await templateService.createTemplate(name, templateJson);
 
         res.status(201).json({
             message: "Template created successfully",
