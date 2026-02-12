@@ -4,7 +4,6 @@ const { initializeDatabase } = require("./src/db/database");
 
 const PORT = process.env.PORT || 4000;
 
-// Inicializar BD
 initializeDatabase();
 
 app.listen(PORT, () => {
