@@ -1,4 +1,5 @@
 const express = require("express");
+const path = require("path");
 
 const securityMiddleware = require("./middlewares/security.middleware");
 const loggerMiddleware = require("./middlewares/logger.middleware");
@@ -14,6 +15,8 @@ securityMiddleware(app);
 app.use(express.json({ limit: "5mb" }));
 
 loggerMiddleware(app);
+
+app.use("/admin", express.static(path.join(__dirname, "public")));
 
 app.use("/templates", templateRoutes);
 app.use("/generate", pdfRoutes);
