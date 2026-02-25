@@ -1,3 +1,4 @@
+// src/components/pdf-editor/create-tab.tsx (versión actualizada)
 "use client"
 
 import { useCallback, useState } from "react"
@@ -5,7 +6,18 @@ import type { CanvasElement } from "../../lib/pdf-editor-types"
 import { ELEMENT_COLORS } from "../../lib/pdf-editor-types"
 import { CanvasEditor } from "./canvas-editor"
 import { ElementToolbar } from "./element-toolbar"
+import { templateService } from "../../services/template.service"
 import { toast } from "sonner"
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from "../ui/dialog"
+import { Input } from "../ui/input"
+import { Label } from "../ui/label"
+import { Button } from "../ui/button"
 
 let elementCounter = 0
 
@@ -75,6 +87,9 @@ export function CreateTab() {
     const [elements, setElements] = useState<CanvasElement[]>([])
     const [selectedElement, setSelectedElement] = useState<string | null>(null)
     const [activeColor, setActiveColor] = useState(ELEMENT_COLORS[0])
+    const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false)
+    const [templateName, setTemplateName] = useState("")
+    const [isSaving, setIsSaving] = useState(false)
 
     const handleAddElement = useCallback(
         (type: CanvasElement["type"]) => {
@@ -99,19 +114,40 @@ export function CreateTab() {
         [selectedElement]
     )
 
-    const handleSave = useCallback(() => {
-        // Aquí irá la llamada al backend
-        console.log("Template a guardar:", {
-            name: "Mi Template",
-            templateJson: {
-                objects: elements
-            }
-        })
+    const handleSave = useCallback(async () => {
+        if (!templateName.trim()) {
+            toast.error("Error", {
+                description: "El nombre del template es requerido",
+            })
+            return
+        }
 
-        toast.success("Template guardada exitosamente", {
-            description: `${elements.length} elementos guardados`,
-        })
-    }, [elements])
+        setIsSaving(true)
+        try {
+            await templateService.create({
+                name: templateName,
+                templateJson: {
+                    objects: elements
+                }
+            })
+
+            toast.success("Template guardada exitosamente", {
+                description: `${elements.length} elementos guardados`,
+            })
+
+            // Limpiar después de guardar
+            setElements([])
+            setSelectedElement(null)
+            setTemplateName("")
+            setIsSaveDialogOpen(false)
+        } catch (error) {
+            toast.error("Error al guardar", {
+                description: error instanceof Error ? error.message : "Error desconocido",
+            })
+        } finally {
+            setIsSaving(false)
+        }
+    }, [templateName, elements])
 
     return (
         <div className="flex h-full">
@@ -128,10 +164,49 @@ export function CreateTab() {
                 onUpdateElement={handleUpdateElement}
                 onDeleteElement={handleDeleteElement}
                 onSelectElement={setSelectedElement}
-                onSave={handleSave}
+                onSave={() => setIsSaveDialogOpen(true)}
                 activeColor={activeColor}
                 onColorChange={setActiveColor}
             />
+
+            <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>
+                <DialogContent className="bg-card border-border sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle className="text-foreground">Guardar Template</DialogTitle>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="name" className="text-muted-foreground">
+                                Nombre del Template
+                            </Label>
+                            <Input
+                                id="name"
+                                value={templateName}
+                                onChange={(e) => setTemplateName(e.target.value)}
+                                placeholder="Ej: Factura Comercial"
+                                className="bg-secondary border-border text-foreground"
+                                autoFocus
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsSaveDialogOpen(false)}
+                            className="border-border text-foreground"
+                        >
+                            Cancelar
+                        </Button>
+                        <Button
+                            onClick={handleSave}
+                            disabled={isSaving || !templateName.trim()}
+                            className="bg-primary text-primary-foreground"
+                        >
+                            {isSaving ? "Guardando..." : "Guardar"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
