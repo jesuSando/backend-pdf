@@ -1,34 +1,67 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from "react"
+import { CreateTab } from "./components/pdf-editor/create-tab"
+import { ListTab } from "./components/pdf-editor/list-tab"
+import { FileText, PenTool, LayoutList } from "lucide-react"
+import { Toaster } from "sonner"
+
+type ActiveTab = "create" | "list"
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [activeTab, setActiveTab] = useState<ActiveTab>("create")
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <div className="flex h-screen flex-col bg-background">
+      <header className="flex items-center justify-between border-b border-border px-6">
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2.5 py-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+              <FileText className="h-4.5 w-4.5 text-primary-foreground" />
+            </div>
+            <span className="text-sm font-bold tracking-tight text-foreground">
+              PDF Editor
+            </span>
+          </div>
+
+          <div className="h-6 w-px bg-border" />
+
+          <nav className="flex">
+            <button
+              onClick={() => setActiveTab("create")}
+              className={`relative flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${activeTab === "create"
+                  ? "text-foreground"
+                  : "text-muted-foreground hover:text-foreground cursor-pointer"
+                }`}
+            >
+              <PenTool className="h-4 w-4" />
+              Crear
+              {activeTab === "create" && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab("list")}
+              className={`relative flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${activeTab === "list"
+                  ? "text-foreground"
+                  : "text-muted-foreground hover:text-foreground cursor-pointer"
+                }`}
+            >
+              <LayoutList className="h-4 w-4" />
+              Listar
+              {activeTab === "list" && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+              )}
+            </button>
+          </nav>
+        </div>
+      </header>
+
+      <main className="flex-1 overflow-hidden">
+        {activeTab === "create" && <CreateTab />}
+        {activeTab === "list" && <ListTab />}
+      </main>
+
+      <Toaster position="top-right" richColors />
+    </div>
   )
 }
 
