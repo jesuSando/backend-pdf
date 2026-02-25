@@ -1,15 +1,15 @@
 {
-  "name": "backend-pdf",
+  "name": "pdf-generation-service",
   "version": "1.0.0",
-  "description": "",
+  "description": "PDF generation service with admin panel",
   "main": "server.js",
-  "scripts": {
-    "dev": "node server.js"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "type": "commonjs",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "build:admin": "cd admin-frontend && npm install && npm run build",
+    "build": "npm run build:admin"
+  },
   "dependencies": {
     "cors": "^2.8.6",
     "dotenv": "^17.2.4",

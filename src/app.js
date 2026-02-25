@@ -16,7 +16,10 @@ app.use(express.json({ limit: "5mb" }));
 
 loggerMiddleware(app);
 
-app.use("/admin", express.static(path.join(__dirname, "public")));
+app.use(
+  "/admin",
+  express.static(path.join(__dirname, "../admin-frontend/dist"))
+);
 
 app.use("/templates", templateRoutes);
 app.use("/generate", pdfRoutes);
